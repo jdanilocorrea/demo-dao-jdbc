@@ -1,7 +1,6 @@
 package model.dao.impl;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,7 +28,7 @@ public class SellerDaoJDBC implements SellerDao {
 	@Override
 	public void insert(Seller seller) {
 		PreparedStatement pst = null;
-		
+
 		try {
 //			@formatter:off
 			pst = conn.prepareStatement(
@@ -39,13 +38,13 @@ public class SellerDaoJDBC implements SellerDao {
 					+"(?,?,?,?,?)", 
 					Statement.RETURN_GENERATED_KEYS);
 //			@formatter:on
-			
+
 			pst.setString(1, seller.getName());
 			pst.setString(2, seller.getEmail());
 			pst.setDate(3, new java.sql.Date(seller.getBirthDate().getTime()));
 			pst.setDouble(4, seller.getBaseSalary());
 			pst.setInt(5, seller.getDepartment().getId());
-			
+
 			int rowsAffected = pst.executeUpdate();
 
 			if (rowsAffected > 0) {
@@ -55,26 +54,24 @@ public class SellerDaoJDBC implements SellerDao {
 					seller.setId(id);
 				}
 				DB.closeResultSet(rs);
-			}
-			else {
+			} else {
 				throw new DbException("Unexpected error! No rows affected!");
 			}
-			
+
 		} catch (SQLException e) {
 			throw new DbException(e.getMessage());
-		}
-		finally{
+		} finally {
 			DB.closeStatement(pst);
-			
+
 		}
 
 	}
 
 	@Override
 	public void update(Seller seller) {
-		
-PreparedStatement pst = null;
-		
+
+		PreparedStatement pst = null;
+
 		try {
 //			@formatter:off
 			pst = conn.prepareStatement(
@@ -82,30 +79,47 @@ PreparedStatement pst = null;
 					+ "SET Name = ?, Email = ?, BirthDate = ?, BaseSalary = ?, DepartmentId = ? "
 					+ "WHERE Id = ?");
 //			@formatter:on
-			
+
 			pst.setString(1, seller.getName());
 			pst.setString(2, seller.getEmail());
 			pst.setDate(3, new java.sql.Date(seller.getBirthDate().getTime()));
 			pst.setDouble(4, seller.getBaseSalary());
 			pst.setInt(5, seller.getDepartment().getId());
 			pst.setInt(6, seller.getId());
-			
+
 			pst.executeUpdate();
 
-			
-		} 
-		catch (SQLException e) {
+		} catch (SQLException e) {
 			throw new DbException(e.getMessage());
-		}
-		finally{
+		} finally {
 			DB.closeStatement(pst);
-			
+
 		}
 
 	}
 
 	@Override
 	public void deleteById(Integer id) {
+
+		PreparedStatement pst = null;
+
+		try {
+//			@formatter:off
+			pst = conn.prepareStatement(
+					"DELETE FROM seller "
+					+ "WHERE Id = ?");
+//			@formatter:on
+			
+			pst.setInt(1, id);
+			pst.executeUpdate();
+
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		} finally {
+
+			DB.closeStatement(pst);
+
+		}
 
 	}
 
@@ -121,7 +135,7 @@ PreparedStatement pst = null;
 					+ "ON seller.DepartmentId = department.Id " 
 					+ "WHERE seller.Id = ?");
 //			@formatter:on
-			
+
 			pst.setInt(1, id);
 			rs = pst.executeQuery();
 			if (rs.next()) {
@@ -147,7 +161,7 @@ PreparedStatement pst = null;
 	public List<Seller> findAll() {
 		PreparedStatement pst = null;
 		ResultSet rs = null;
-		
+
 		try {
 //			@formatter:off
 			pst = conn.prepareStatement(
@@ -156,41 +170,35 @@ PreparedStatement pst = null;
 					+ "ON seller.DepartmentId = department.id "
 					+ "ORDER BY Name");
 //			@formatter:on
-			
-			rs = pst.executeQuery();		
+
+			rs = pst.executeQuery();
 			List<Seller> listSeller = new ArrayList<Seller>();
 			Map<Integer, Department> map = new HashMap<>();
-			
-			
-			while(rs.next()) {
-				
+
+			while (rs.next()) {
+
 				Department dep = map.get(rs.getInt("DepartmentId"));
-				
-				if(dep == null) {
+
+				if (dep == null) {
 					dep = instantiateDepartment(rs);
 					map.put(rs.getInt("DepartmentId"), dep);
 				}
-				
-				
+
 				Seller sel = instantiateSeller(rs, dep);
-				listSeller.add(sel);				
+				listSeller.add(sel);
 			}
 			return listSeller;
-		} 
-		catch (SQLException e) {
-			
+		} catch (SQLException e) {
+
 			throw new DbException(e.getMessage());
-		
-		}
-		finally {
-			
+
+		} finally {
+
 			DB.closeStatement(pst);
 			DB.closeResultSet(rs);
-			
+
 		}
-		
-		
-		
+
 	}
 
 	private Seller instantiateSeller(ResultSet rs, Department department) throws SQLException {
@@ -228,33 +236,29 @@ PreparedStatement pst = null;
 
 			pst.setInt(1, department.getId());
 			rs = pst.executeQuery();
-			
+
 			List<Seller> listSeller = new ArrayList<Seller>();
 			Map<Integer, Department> map = new HashMap<>();
-			
-			
-			while(rs.next()) {
-				
+
+			while (rs.next()) {
+
 				Department dep = map.get(rs.getInt("DepartmentId"));
-				
-				if(dep == null) {
+
+				if (dep == null) {
 					dep = instantiateDepartment(rs);
 					map.put(rs.getInt("DepartmentId"), dep);
 				}
-				
-				
+
 				Seller sel = instantiateSeller(rs, dep);
-				listSeller.add(sel);				
+				listSeller.add(sel);
 			}
 			return listSeller;
-		
-		}
-		catch (SQLException e) {
+
+		} catch (SQLException e) {
 
 			throw new DbException(e.getMessage());
 
-		}
-		finally {
+		} finally {
 			DB.closeStatement(pst);
 			DB.closeResultSet(rs);
 		}
