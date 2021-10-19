@@ -31,12 +31,14 @@ public class SellerDaoJDBC implements SellerDao {
 		PreparedStatement pst = null;
 		
 		try {
+//			@formatter:off
 			pst = conn.prepareStatement(
 					"INSERT INTO seller "
 					+"(Name, Email, BirthDate, BaseSalary, DepartmentId) "
 					+"VALUES "
 					+"(?,?,?,?,?)", 
 					Statement.RETURN_GENERATED_KEYS);
+//			@formatter:on
 			
 			pst.setString(1, seller.getName());
 			pst.setString(2, seller.getEmail());
@@ -69,7 +71,36 @@ public class SellerDaoJDBC implements SellerDao {
 	}
 
 	@Override
-	public void update(Seller obj) {
+	public void update(Seller seller) {
+		
+PreparedStatement pst = null;
+		
+		try {
+//			@formatter:off
+			pst = conn.prepareStatement(
+					"UPDATE seller "
+					+ "SET Name = ?, Email = ?, BirthDate = ?, BaseSalary = ?, DepartmentId = ? "
+					+ "WHERE Id = ?");
+//			@formatter:on
+			
+			pst.setString(1, seller.getName());
+			pst.setString(2, seller.getEmail());
+			pst.setDate(3, new java.sql.Date(seller.getBirthDate().getTime()));
+			pst.setDouble(4, seller.getBaseSalary());
+			pst.setInt(5, seller.getDepartment().getId());
+			pst.setInt(6, seller.getId());
+			
+			pst.executeUpdate();
+
+			
+		} 
+		catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		}
+		finally{
+			DB.closeStatement(pst);
+			
+		}
 
 	}
 
@@ -90,6 +121,7 @@ public class SellerDaoJDBC implements SellerDao {
 					+ "ON seller.DepartmentId = department.Id " 
 					+ "WHERE seller.Id = ?");
 //			@formatter:on
+			
 			pst.setInt(1, id);
 			rs = pst.executeQuery();
 			if (rs.next()) {
@@ -117,14 +149,15 @@ public class SellerDaoJDBC implements SellerDao {
 		ResultSet rs = null;
 		
 		try {
+//			@formatter:off
 			pst = conn.prepareStatement(
 					"SELECT seller.*,department.Name DepName "
 					+ "FROM seller INNER JOIN department "
 					+ "ON seller.DepartmentId = department.id "
 					+ "ORDER BY Name");
+//			@formatter:on
 			
-			rs = pst.executeQuery();
-			
+			rs = pst.executeQuery();		
 			List<Seller> listSeller = new ArrayList<Seller>();
 			Map<Integer, Department> map = new HashMap<>();
 			
